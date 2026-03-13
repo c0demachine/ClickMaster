@@ -11,12 +11,18 @@
 <body>
 
     <header>
-        <button class="header-btn update-btn" id="updateBtn" onclick="applyUpdate()" title="No updates detected">● UP TO
-            DATE</button>
-        <h1>CLICKMASTER</h1>
-        <div class="subtitle">&gt; CLICK. GRIND. REPEAT. &lt;</div>
-        <button class="header-btn sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
-        <button class="header-btn settings-btn" onclick="openSettings()">⚙ SETTINGS</button>
+        <div class="header-btn-group">
+            <button class="header-btn update-btn" id="updateBtn" onclick="applyUpdate()" title="No updates detected">●
+                UP TO DATE</button>
+        </div>
+        <div class="title-group">
+            <h1>CLICKMASTER</h1>
+            <div class="subtitle">&gt; CLICK. GRIND. REPEAT. &lt;</div>
+        </div>
+        <div class="header-btn-group">
+            <button class="header-btn sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+            <button class="header-btn settings-btn" onclick="openSettings()">⚙ SETTINGS</button>
+        </div>
     </header>
 
     <div class="game-wrap">
