@@ -1,1045 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClickMaster</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-        :root {
-            --bg: #0a0a0a;
-            --panel: #1a1a2e;
-            --panel2: #16213e;
-            --border: #00ff88;
-            --border2: #0f3460;
-            --accent: #00ff88;
-            --accent2: #ff6b35;
-            --text: #e0e0e0;
-            --dim: #888;
-            --gold: #ffd700;
-            --pixel: 2px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            image-rendering: pixelated;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Press Start 2P', monospace;
-            font-size: 10px;
-            min-height: 100vh;
-            overflow-x: hidden;
-            background-image:
-                repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(0,255,136,0.03) 31px, rgba(0,255,136,0.03) 32px),
-                repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(0,255,136,0.03) 31px, rgba(0,255,136,0.03) 32px);
-        }
-
-        /* SCANLINE OVERLAY */
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
-            pointer-events: none;
-            z-index: 9999;
-        }
-
-        /* PIXEL BORDER MIXIN */
-        .pixel-box {
-            border: 3px solid var(--border);
-            box-shadow: 4px 4px 0 #00884a, inset 0 0 20px rgba(0,255,136,0.05);
-            position: relative;
-        }
-
-        .pixel-box::before {
-            content: '';
-            position: absolute;
-            top: -6px;
-            left: -6px;
-            right: -6px;
-            bottom: -6px;
-            border: 2px solid rgba(0,255,136,0.2);
-            pointer-events: none;
-        }
-
-        /* HEADER */
-        header {
-            text-align: center;
-            padding: 18px 20px 12px;
-            border-bottom: 3px solid var(--border2);
-            background: var(--panel2);
-            position: relative;
-        }
-
-        header h1 {
-            font-size: 22px;
-            color: var(--accent);
-            text-shadow: 4px 4px 0 #00884a, 0 0 20px rgba(0,255,136,0.5);
-            letter-spacing: 4px;
-            animation: titlePulse 3s ease-in-out infinite;
-        }
-
-        header .subtitle {
-            color: var(--dim);
-            font-size: 7px;
-            margin-top: 6px;
-            letter-spacing: 2px;
-        }
-
-        @keyframes titlePulse {
-            0%, 100% { text-shadow: 4px 4px 0 #00884a, 0 0 20px rgba(0,255,136,0.5); }
-            50% { text-shadow: 4px 4px 0 #00884a, 0 0 40px rgba(0,255,136,0.9), 0 0 60px rgba(0,255,136,0.4); }
-        }
-
-        /* SETTINGS BTN */
-        .settings-btn {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--panel);
-            border: 2px solid var(--accent2);
-            color: var(--accent2);
-            font-family: 'Press Start 2P', monospace;
-            font-size: 9px;
-            padding: 8px 10px;
-            cursor: pointer;
-            box-shadow: 3px 3px 0 #8a3500;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-
-        .settings-btn:hover {
-            transform: translateY(-50%) translate(-1px,-1px);
-            box-shadow: 4px 4px 0 #8a3500;
-        }
-
-        .settings-btn:active {
-            transform: translateY(-50%) translate(2px,2px);
-            box-shadow: 1px 1px 0 #8a3500;
-        }
-
-        /* MAIN LAYOUT */
-        .game-wrap {
-            display: flex;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 20px;
-            gap: 20px;
-            min-height: calc(100vh - 90px);
-        }
-
-        /* LEFT: CLICKER */
-        .clicker-panel {
-            flex: 0 0 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .stats-box {
-            background: var(--panel);
-            padding: 16px;
-            text-align: center;
-        }
-
-        .points-display {
-            font-size: 20px;
-            color: var(--gold);
-            text-shadow: 3px 3px 0 #886000, 0 0 15px rgba(255,215,0,0.4);
-            line-height: 1.4;
-        }
-
-        .points-label {
-            font-size: 7px;
-            color: var(--dim);
-            margin-top: 4px;
-        }
-
-        .cps-display {
-            font-size: 8px;
-            color: var(--accent);
-            margin-top: 8px;
-        }
-
-        /* CLICKER AREA */
-        .clicker-area {
-            background: var(--panel);
-            padding: 24px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .logo-hint {
-            font-size: 7px;
-            color: var(--dim);
-            margin-bottom: 12px;
-            cursor: pointer;
-        }
-
-        .logo-hint:hover {
-            color: var(--accent);
-        }
-
-        .click-btn {
-            width: 160px;
-            height: 160px;
-            border-radius: 0;
-            border: 4px solid var(--accent);
-            background: var(--panel2);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 6px 6px 0 #00884a, inset 0 0 30px rgba(0,255,136,0.08);
-            transition: transform 0.08s, box-shadow 0.08s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-        }
-
-        .click-btn:hover {
-            transform: translate(-2px,-2px);
-            box-shadow: 8px 8px 0 #00884a;
-        }
-
-        .click-btn:active {
-            transform: translate(4px,4px);
-            box-shadow: 2px 2px 0 #00884a;
-        }
-
-        .click-btn.clicked {
-            animation: clickBounce 0.15s ease-out;
-        }
-
-        @keyframes clickBounce {
-            0% { transform: translate(4px,4px) scale(0.93); }
-            100% { transform: translate(0,0) scale(1); }
-        }
-
-        .click-btn img {
-            width: 120px;
-            height: 120px;
-            object-fit: contain;
-            image-rendering: pixelated;
-        }
-
-        /* DEFAULT PIXEL LOGO */
-        .pixel-logo {
-            width: 120px;
-            height: 120px;
-            position: relative;
-            display: grid;
-            place-items: center;
-        }
-
-        /* FLOAT NUMBERS */
-        .float-num {
-            position: absolute;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 12px;
-            color: var(--gold);
-            text-shadow: 2px 2px 0 #886000;
-            pointer-events: none;
-            animation: floatUp 0.9s ease-out forwards;
-            white-space: nowrap;
-            z-index: 100;
-        }
-
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1.2); }
-            100% { opacity: 0; transform: translateY(-70px) scale(0.8); }
-        }
-
-        /* CLICK RIPPLE */
-        .ripple {
-            position: absolute;
-            border: 3px solid var(--accent);
-            border-radius: 0;
-            width: 20px;
-            height: 20px;
-            pointer-events: none;
-            animation: rippleOut 0.4s ease-out forwards;
-            transform-origin: center;
-        }
-
-        @keyframes rippleOut {
-            0% { opacity: 1; transform: translate(-50%,-50%) scale(1); width: 20px; height: 20px; }
-            100% { opacity: 0; transform: translate(-50%,-50%) scale(1); width: 160px; height: 160px; }
-        }
-
-        /* RIGHT: UPGRADES */
-        .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .panel-title {
-            font-size: 11px;
-            color: var(--accent);
-            text-shadow: 2px 2px 0 #00884a;
-            border-bottom: 2px solid var(--border2);
-            padding-bottom: 10px;
-            margin-bottom: 4px;
-        }
-
-        .upgrades-panel {
-            background: var(--panel);
-            padding: 16px;
-            flex: 1;
-        }
-
-        .upgrade-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .upgrade-card {
-            background: var(--panel2);
-            border: 2px solid var(--border2);
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            box-shadow: 3px 3px 0 #0a1628;
-            transition: transform 0.1s, box-shadow 0.1s, border-color 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .upgrade-card:hover:not(.locked) {
-            border-color: var(--accent);
-            transform: translate(-1px,-1px);
-            box-shadow: 4px 4px 0 #00884a;
-        }
-
-        .upgrade-card:active:not(.locked) {
-            transform: translate(2px,2px);
-            box-shadow: 1px 1px 0 #00884a;
-        }
-
-        .upgrade-card.locked {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        .upgrade-card.affordable {
-            border-color: var(--gold);
-        }
-
-        .upgrade-card.affordable::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,215,0,0.05) 0%, transparent 60%);
-        }
-
-        .upgrade-icon {
-            font-size: 20px;
-            width: 36px;
-            text-align: center;
-            flex-shrink: 0;
-            filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5));
-        }
-
-        .upgrade-info {
-            flex: 1;
-        }
-
-        .upgrade-name {
-            font-size: 9px;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-
-        .upgrade-desc {
-            font-size: 7px;
-            color: var(--dim);
-            line-height: 1.6;
-        }
-
-        .upgrade-owned {
-            font-size: 7px;
-            color: var(--accent);
-            margin-top: 3px;
-        }
-
-        .upgrade-cost {
-            font-size: 9px;
-            color: var(--gold);
-            text-shadow: 1px 1px 0 #886000;
-            white-space: nowrap;
-            text-align: right;
-        }
-
-        .upgrade-cost.cant-afford {
-            color: #888;
-            text-shadow: none;
-        }
-
-        /* SETTINGS MODAL */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            display: none;
-        }
-
-        .modal-overlay.open {
-            display: flex;
-        }
-
-        .modal {
-            background: var(--panel);
-            border: 4px solid var(--accent2);
-            box-shadow: 8px 8px 0 #8a3500, 0 0 40px rgba(255,107,53,0.2);
-            padding: 28px;
-            width: 380px;
-            max-width: 95vw;
-            position: relative;
-        }
-
-        .modal-title {
-            font-size: 14px;
-            color: var(--accent2);
-            text-shadow: 3px 3px 0 #8a3500;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 10px;
-            right: 12px;
-            background: none;
-            border: 2px solid var(--accent2);
-            color: var(--accent2);
-            font-family: 'Press Start 2P', monospace;
-            font-size: 9px;
-            padding: 4px 8px;
-            cursor: pointer;
-        }
-
-        .modal-close:hover {
-            background: var(--accent2);
-            color: #000;
-        }
-
-        .modal-btn {
-            display: block;
-            width: 100%;
-            margin-bottom: 12px;
-            padding: 14px;
-            background: var(--panel2);
-            border: 3px solid;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 9px;
-            cursor: pointer;
-            text-align: left;
-            transition: transform 0.1s, box-shadow 0.1s;
-            line-height: 1.6;
-        }
-
-        .modal-btn:hover {
-            transform: translate(-1px,-1px);
-        }
-
-        .modal-btn:active {
-            transform: translate(2px,2px);
-        }
-
-        .btn-danger {
-            border-color: #ff4444;
-            color: #ff4444;
-            box-shadow: 3px 3px 0 #880000;
-        }
-
-        .btn-danger:hover {
-            box-shadow: 4px 4px 0 #880000;
-        }
-
-        .btn-save {
-            border-color: var(--gold);
-            color: var(--gold);
-            box-shadow: 3px 3px 0 #886000;
-        }
-
-        .btn-save:hover {
-            box-shadow: 4px 4px 0 #886000;
-        }
-
-        .btn-close-modal {
-            border-color: var(--dim);
-            color: var(--dim);
-            box-shadow: 3px 3px 0 #444;
-        }
-
-        .modal-desc {
-            font-size: 7px;
-            color: var(--dim);
-            margin-top: 4px;
-        }
-
-        /* CONFIRM MODAL */
-        .confirm-text {
-            font-size: 9px;
-            color: var(--text);
-            line-height: 2;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .confirm-warn {
-            font-size: 8px;
-            color: #ff4444;
-            text-align: center;
-            margin-bottom: 20px;
-            line-height: 1.8;
-        }
-
-        .confirm-btns {
-            display: flex;
-            gap: 12px;
-        }
-
-        .confirm-btns .modal-btn {
-            margin-bottom: 0;
-        }
-
-        /* UPLOAD HIDDEN */
-        #logoUpload {
-            display: none;
-        }
-
-        /* UPDATE BUTTON */
-        .update-btn {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--panel);
-            border: 2px solid var(--dim);
-            color: var(--dim);
-            font-family: 'Press Start 2P', monospace;
-            font-size: 9px;
-            padding: 8px 10px;
-            cursor: default;
-            box-shadow: 3px 3px 0 #333;
-            transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
-            white-space: nowrap;
-        }
-
-        .update-btn.has-update {
-            border-color: var(--accent);
-            color: var(--accent);
-            cursor: pointer;
-            box-shadow: 3px 3px 0 #00884a;
-            animation: updateGlow 1.2s ease-in-out infinite;
-        }
-
-        .update-btn.has-update:hover {
-            transform: translateY(-50%) translate(-1px,-1px);
-            box-shadow: 5px 5px 0 #00884a;
-        }
-
-        .update-btn.has-update:active {
-            transform: translateY(-50%) translate(2px,2px);
-            box-shadow: 1px 1px 0 #00884a;
-        }
-
-        @keyframes updateGlow {
-            0%, 100% {
-                box-shadow: 3px 3px 0 #00884a, 0 0 8px rgba(0,255,136,0.3);
-                border-color: var(--accent);
-            }
-            50% {
-                box-shadow: 3px 3px 0 #00884a, 0 0 22px rgba(0,255,136,0.9), 0 0 40px rgba(0,255,136,0.4);
-                border-color: #88ffcc;
-            }
-        }
-
-        /* PIXEL CURSOR */
-        .click-btn {
-            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect x='0' y='0' width='4' height='4' fill='%2300ff88'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%2300ff88'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%2300ff88'/%3E%3Crect x='12' y='12' width='4' height='4' fill='%2300ff88'/%3E%3C/svg%3E") 0 0, pointer;
-        }
-
-        /* NOTIFICATION */
-        .notif {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--panel);
-            border: 3px solid var(--accent);
-            box-shadow: 4px 4px 0 #00884a;
-            padding: 12px 20px;
-            font-size: 9px;
-            color: var(--accent);
-            z-index: 2000;
-            animation: notifIn 0.2s ease-out, notifOut 0.3s ease-in 2s forwards;
-            white-space: nowrap;
-        }
-
-        @keyframes notifIn {
-            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-
-        @keyframes notifOut {
-            to { transform: translateX(-50%) translateY(-30px); opacity: 0; }
-        }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: var(--border2); border: 1px solid var(--accent); }
-
-        /* CPS AUTO CLICK VISUAL */
-        @keyframes autoPing {
-            0% { box-shadow: 6px 6px 0 #00884a, 0 0 0 0 rgba(0,255,136,0.6); }
-            70% { box-shadow: 6px 6px 0 #00884a, 0 0 0 16px rgba(0,255,136,0); }
-            100% { box-shadow: 6px 6px 0 #00884a; }
-        }
-
-        .click-btn.auto-ping {
-            animation: autoPing 0.5s ease-out;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<header>
-    <h1>CLICKMASTER</h1>
-    <div class="subtitle">&gt; CLICK. GRIND. REPEAT. &lt;</div>
-    <button class="update-btn" id="updateBtn" onclick="applyUpdate()" title="No updates detected">● UP TO DATE</button>
-    <button class="settings-btn" onclick="openSettings()">⚙ MENU</button>
-</header>
+    <header>
+        <button class="header-btn update-btn" id="updateBtn" onclick="applyUpdate()" title="No updates detected">● UP TO
+            DATE</button>
+        <h1>CLICKMASTER</h1>
+        <div class="subtitle">&gt; CLICK. GRIND. REPEAT. &lt;</div>
+        <button class="header-btn sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+        <button class="header-btn settings-btn" onclick="openSettings()">⚙ SETTINGS</button>
+    </header>
 
-<div class="game-wrap">
-    <!-- LEFT PANEL -->
-    <div class="clicker-panel">
-        <div class="stats-box pixel-box">
-            <div class="points-display" id="pointsDisplay">0</div>
-            <div class="points-label">POINTS</div>
-            <div class="cps-display" id="cpsDisplay">+0 PER SEC | +1 PER CLICK</div>
-        </div>
+    <div class="game-wrap">
 
-        <div class="clicker-area pixel-box">
-            <div class="logo-hint" onclick="document.getElementById('logoUpload').click()">[ UPLOAD LOGO ]</div>
-            <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)">
-
-            <button class="click-btn" id="clickBtn" onclick="handleClick(event)">
-                <canvas id="defaultLogo" width="120" height="120"></canvas>
-            </button>
-        </div>
-    </div>
-
-    <!-- RIGHT PANEL -->
-    <div class="right-panel">
-        <div class="upgrades-panel pixel-box">
-            <div class="panel-title">▶ UPGRADES</div>
-            <div class="upgrade-grid" id="upgradeGrid"></div>
-        </div>
-    </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="modal-overlay" id="settingsModal">
-    <div class="modal">
-        <div class="modal-title">⚙ SETTINGS</div>
-        <button class="modal-close" onclick="closeSettings()">✕</button>
-
-        <button class="modal-btn btn-save" onclick="saveAndRestart()">
-            💾 SAVE &amp; RESTART
-            <div class="modal-desc">Downloads your save file, then resets game.</div>
-        </button>
-
-        <button class="modal-btn btn-danger" onclick="confirmRestart()">
-            ⚠ RESTART
-            <div class="modal-desc">Wipe all progress. No going back.</div>
-        </button>
-
-        <button class="modal-btn btn-close-modal" onclick="loadSave()">
-            📂 LOAD SAVE
-            <div class="modal-desc">Import a previously saved .json file.</div>
-        </button>
-        <input type="file" id="saveUpload" accept=".json" onchange="handleSaveLoad(event)" style="display:none">
-
-        <button class="modal-btn btn-close-modal" onclick="closeSettings()">
-            ← BACK TO GAME
-        </button>
-    </div>
-</div>
-
-<!-- CONFIRM RESTART MODAL -->
-<div class="modal-overlay" id="confirmModal">
-    <div class="modal">
-        <div class="modal-title" style="color:#ff4444;text-shadow:3px 3px 0 #880000;">⚠ WARNING</div>
-        <div class="confirm-text">ARE YOU SURE YOU WANT<br>TO RESTART?</div>
-        <div class="confirm-warn">ALL PROGRESS WILL BE LOST.<br>THIS CANNOT BE UNDONE.</div>
-        <div class="confirm-btns">
-            <button class="modal-btn btn-danger" style="text-align:center" onclick="doRestart()">YES, RESET</button>
-            <button class="modal-btn btn-close-modal" style="text-align:center" onclick="closeConfirm()">CANCEL</button>
-        </div>
-    </div>
-</div>
-
-<script>
-// ─── GAME STATE ───────────────────────────────────────────────────────────────
-let state = {
-    points: 0,
-    totalClicks: 0,
-    clickPower: 1,
-    cps: 0,
-    upgrades: {}
-};
-
-const UPGRADES = [
-    { id: 'cursor',   name: 'AUTO CURSOR',   icon: '🖱️', desc: '+0.1 clicks/sec — A tiny cursor clicks for you.',    baseCost: 15,   cpsBonus: 0.1,  clickBonus: 0 },
-    { id: 'bot',      name: 'CLICK BOT',     icon: '🤖', desc: '+0.5 clicks/sec — Mediocre robot joins the team.',   baseCost: 100,  cpsBonus: 0.5,  clickBonus: 0 },
-    { id: 'finger',   name: 'TURBO FINGER',  icon: '👆', desc: '+2 per click — You click harder, somehow.',         baseCost: 200,  cpsBonus: 0,    clickBonus: 2 },
-    { id: 'script',   name: 'CLICK SCRIPT',  icon: '📜', desc: '+2 clicks/sec — Runs a shoddy automation script.',  baseCost: 500,  cpsBonus: 2,    clickBonus: 0 },
-    { id: 'monkey',   name: 'CLICK MONKEY',  icon: '🐒', desc: '+5 per click — Infinite monkey theorem, applied.',  baseCost: 1000, cpsBonus: 0,    clickBonus: 5 },
-    { id: 'server',   name: 'CLICK SERVER',  icon: '🖥️', desc: '+10 clicks/sec — Dedicated server for clicking.',   baseCost: 2500, cpsBonus: 10,   clickBonus: 0 },
-    { id: 'rift',     name: 'CLICK RIFT',    icon: '🌀', desc: '+50 clicks/sec — Opens rift to click dimension.',   baseCost: 10000,cpsBonus: 50,   clickBonus: 0 },
-    { id: 'god',      name: 'CLICK GOD',     icon: '⚡', desc: '+100/click — Ascend. Become the click.',            baseCost: 50000,cpsBonus: 0,    clickBonus: 100},
-];
-
-// Init upgrade counts
-UPGRADES.forEach(u => { state.upgrades[u.id] = 0; });
-
-// ─── PIXEL LOGO CANVAS ───────────────────────────────────────────────────────
-function drawDefaultLogo() {
-    const c = document.getElementById('defaultLogo');
-    if (!c) return;
-    const ctx = c.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    const S = 120, G = 8, cell = S / G;
-
-    // Grid: 0=bg, 1=green, 2=dark, 3=gold, 4=accent
-    const grid = [
-        [0,0,2,2,2,2,0,0],
-        [0,2,1,1,1,1,2,0],
-        [2,1,3,1,1,3,1,2],
-        [2,1,1,1,1,1,1,2],
-        [2,1,1,3,3,1,1,2],
-        [2,1,3,1,1,3,1,2],
-        [0,2,1,1,1,1,2,0],
-        [0,0,2,2,2,2,0,0],
-    ];
-    const colors = ['#1a1a2e','#00ff88','#0a3020','#ffd700','#ff6b35'];
-
-    grid.forEach((row, r) => row.forEach((v, c2) => {
-        ctx.fillStyle = colors[v];
-        ctx.fillRect(c2 * cell, r * cell, cell, cell);
-    }));
-
-    // Inner border pixels
-    ctx.fillStyle = '#00ff88';
-    ctx.fillRect(0, 0, S, 4); ctx.fillRect(0, S - 4, S, 4);
-    ctx.fillRect(0, 0, 4, S); ctx.fillRect(S - 4, 0, 4, S);
-}
-
-// ─── LOGO UPLOAD ──────────────────────────────────────────────────────────────
-function handleLogoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        const btn = document.getElementById('clickBtn');
-        btn.innerHTML = `<img src="${ev.target.result}" alt="logo">`;
-    };
-    reader.readAsDataURL(file);
-}
-
-// ─── CLICK HANDLER ───────────────────────────────────────────────────────────
-function handleClick(e) {
-    state.points += state.clickPower;
-    state.totalClicks++;
-    const btn = document.getElementById('clickBtn');
-
-    // Bounce animation
-    btn.classList.remove('clicked');
-    void btn.offsetWidth;
-    btn.classList.add('clicked');
-
-    // Float number
-    const rect = btn.getBoundingClientRect();
-    const wrap = btn.parentElement;
-    const wRect = wrap.getBoundingClientRect();
-    const floater = document.createElement('div');
-    floater.className = 'float-num';
-    floater.textContent = '+' + state.clickPower;
-    const ox = e.clientX - wRect.left;
-    const oy = e.clientY - wRect.top;
-    floater.style.left = (ox - 10) + 'px';
-    floater.style.top = (oy - 10) + 'px';
-    wrap.appendChild(floater);
-    floater.addEventListener('animationend', () => floater.remove());
-
-    // Pixel ripple
-    const ripple = document.createElement('div');
-    ripple.className = 'ripple';
-    ripple.style.left = (ox) + 'px';
-    ripple.style.top = (oy) + 'px';
-    wrap.appendChild(ripple);
-    ripple.addEventListener('animationend', () => ripple.remove());
-
-    updateUI();
-}
-
-// ─── CPS LOOP ────────────────────────────────────────────────────────────────
-let cpsAccum = 0;
-let lastTick = Date.now();
-setInterval(() => {
-    const now = Date.now();
-    const dt = (now - lastTick) / 1000;
-    lastTick = now;
-    if (state.cps > 0) {
-        state.points += state.cps * dt;
-        cpsAccum += state.cps * dt;
-        if (cpsAccum >= 1) {
-            cpsAccum = 0;
-            // Visual auto-ping
-            const btn = document.getElementById('clickBtn');
-            btn.classList.remove('auto-ping');
-            void btn.offsetWidth;
-            btn.classList.add('auto-ping');
-        }
-    }
-    updateUI();
-}, 50);
-
-// ─── UI UPDATE ───────────────────────────────────────────────────────────────
-function updateUI() {
-    document.getElementById('pointsDisplay').textContent = fmt(Math.floor(state.points));
-    document.getElementById('cpsDisplay').textContent =
-        `+${state.cps.toFixed(1)} PER SEC | +${state.clickPower} PER CLICK`;
-
-    const cards = document.querySelectorAll('.upgrade-card');
-    cards.forEach((card, i) => {
-        const upg = UPGRADES[i];
-        const cost = getUpgradeCost(upg);
-        const canAfford = state.points >= cost;
-        card.classList.toggle('affordable', canAfford);
-        card.classList.toggle('locked', !canAfford && state.upgrades[upg.id] === 0 && state.points < cost * 0.5);
-        card.querySelector('.upgrade-cost').textContent = fmt(cost) + ' pts';
-        card.querySelector('.upgrade-cost').className = 'upgrade-cost' + (canAfford ? '' : ' cant-afford');
-        card.querySelector('.upgrade-owned').textContent = 'OWNED: ' + state.upgrades[upg.id];
-    });
-}
-
-function fmt(n) {
-    if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
-    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
-    if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
-    return Math.floor(n).toString();
-}
-
-function getUpgradeCost(upg) {
-    const owned = state.upgrades[upg.id];
-    return Math.floor(upg.baseCost * Math.pow(1.6, owned));
-}
-
-// ─── RENDER UPGRADES ────────────────────────────────────────────────────────
-function renderUpgrades() {
-    const grid = document.getElementById('upgradeGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    UPGRADES.forEach(upg => {
-        const cost = getUpgradeCost(upg);
-        const div = document.createElement('div');
-        div.className = 'upgrade-card';
-        div.innerHTML = `
-            <div class="upgrade-icon">${upg.icon}</div>
-            <div class="upgrade-info">
-                <div class="upgrade-name">${upg.name}</div>
-                <div class="upgrade-desc">${upg.desc}</div>
-                <div class="upgrade-owned">OWNED: ${state.upgrades[upg.id]}</div>
+        <div class="clicker-panel">
+            <div class="stats-box pixel-box">
+                <div class="points-display" id="pointsDisplay">0</div>
+                <div class="points-label">POINTS</div>
+                <div class="cps-display" id="cpsDisplay">+0 CPS | +1 /CLICK</div>
+                <div class="prestige-display" id="prestigeDisplay" style="display:none"></div>
+                <div class="multiplier-display" id="multiplierDisplay" style="display:none"></div>
             </div>
-            <div class="upgrade-cost cant-afford">${fmt(cost)} pts</div>
-        `;
-        div.onclick = () => buyUpgrade(upg);
-        grid.appendChild(div);
-    });
-}
 
-function buyUpgrade(upg) {
-    const cost = getUpgradeCost(upg);
-    if (state.points < cost) return;
-    state.points -= cost;
-    state.upgrades[upg.id]++;
-    // Recalculate totals
-    state.cps = 0;
-    state.clickPower = 1;
-    UPGRADES.forEach(u => {
-        state.cps += u.cpsBonus * state.upgrades[u.id];
-        state.clickPower += u.clickBonus * state.upgrades[u.id];
-    });
-    renderUpgrades();
-    updateUI();
-    showNotif('PURCHASED: ' + upg.name);
-}
+            <div class="clicker-area pixel-box">
+                <div class="logo-hint" onclick="document.getElementById('logoUpload').click()">[ UPLOAD LOGO ]</div>
+                <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)"
+                    style="display:none">
+                <button class="click-btn" id="clickBtn" onclick="handleClick(event)">
+                    <canvas id="defaultLogo" width="120" height="120"></canvas>
+                </button>
+            </div>
+        </div>
 
-// ─── SETTINGS ────────────────────────────────────────────────────────────────
-function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
-function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
-function closeConfirm() {
-    document.getElementById('confirmModal').classList.remove('open');
-    document.getElementById('settingsModal').classList.add('open');
-}
+        <div class="right-panel">
+            <div class="tab-bar">
+                <button class="tab-btn" data-tab="manual" onclick="switchTab('manual')">👆 CLICKS</button>
+                <button class="tab-btn" data-tab="auto" onclick="switchTab('auto')">🤖 AUTO</button>
+                <button class="tab-btn" data-tab="achievements" onclick="switchTab('achievements')">🏆 BADGES</button>
+                <button class="tab-btn" data-tab="leaderboard" onclick="switchTab('leaderboard')">🥇 BOARD</button>
+            </div>
 
-function confirmRestart() {
-    closeSettings();
-    document.getElementById('confirmModal').classList.add('open');
-}
+            <div class="tab-content" data-tab="manual">
+                <div class="upgrades-panel">
+                    <div class="panel-title">▶ CLICK POWER UPGRADES</div>
+                    <div class="upgrade-grid" id="manualGrid"></div>
+                </div>
+            </div>
 
-function doRestart() {
-    document.getElementById('confirmModal').classList.remove('open');
-    resetState();
-    showNotif('GAME RESET. START OVER.');
-}
+            <div class="tab-content" data-tab="auto">
+                <div class="upgrades-panel">
+                    <div class="panel-title">▶ AUTO CLICKER UPGRADES</div>
+                    <div class="upgrade-grid" id="autoGrid"></div>
+                </div>
+            </div>
 
-function resetState() {
-    state.points = 0;
-    state.totalClicks = 0;
-    state.clickPower = 1;
-    state.cps = 0;
-    UPGRADES.forEach(u => { state.upgrades[u.id] = 0; });
-    // Reset logo
-    const btn = document.getElementById('clickBtn');
-    btn.innerHTML = '<canvas id="defaultLogo" width="120" height="120"></canvas>';
-    drawDefaultLogo();
-    renderUpgrades();
-    updateUI();
-}
+            <div class="tab-content" data-tab="achievements">
+                <div class="upgrades-panel">
+                    <div class="panel-title">▶ ACHIEVEMENTS & MULTIPLIERS</div>
+                    <div class="achievements-summary" id="achievementsSummary"></div>
+                    <div class="upgrade-grid" id="achievementsGrid"></div>
+                </div>
+            </div>
 
-function saveAndRestart() {
-    const saveData = JSON.stringify({ ...state, savedAt: new Date().toISOString(), version: 1 }, null, 2);
-    const blob = new Blob([saveData], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'clickmaster_save.json';
-    a.click();
-    closeSettings();
-    setTimeout(() => {
-        resetState();
-        showNotif('SAVED & RESET.');
-    }, 300);
-}
+            <div class="tab-content" data-tab="leaderboard">
+                <div class="upgrades-panel">
+                    <div class="panel-title">▶ LEADERBOARD</div>
+                    <div class="leaderboard-actions">
+                        <button class="lb-btn" onclick="submitScore()">📝 SUBMIT SCORE</button>
+                        <button class="lb-btn" onclick="copyShareCode()">📋 COPY SHARE CODE</button>
+                        <button class="lb-btn" onclick="importScore()">📥 IMPORT SCORE</button>
+                        <button class="lb-btn lb-danger" onclick="clearLeaderboard()">🗑 CLEAR</button>
+                    </div>
+                    <div id="leaderboardList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-function loadSave() {
-    document.getElementById('saveUpload').click();
-}
+    <!-- SETTINGS MODAL -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-title">⚙ SETTINGS</div>
+            <button class="modal-close" onclick="closeSettings()">✕</button>
+            <button class="modal-btn btn-prestige" id="prestigeBtn" onclick="confirmPrestige()">
+                ✨ PRESTIGE
+                <div class="modal-desc">Reset everything for a permanent +25% multiplier.</div>
+            </button>
+            <button class="modal-btn btn-save" onclick="saveAndRestart()">
+                💾 SAVE &amp; RESTART
+                <div class="modal-desc">Downloads your save file, then resets the game.</div>
+            </button>
+            <button class="modal-btn btn-danger" onclick="confirmRestart()">
+                ⚠ RESTART
+                <div class="modal-desc">Wipe all progress. No going back.</div>
+            </button>
+            <button class="modal-btn btn-neutral" onclick="loadSave()">
+                📂 LOAD SAVE
+                <div class="modal-desc">Import a previously saved .json file.</div>
+            </button>
+            <input type="file" id="saveUpload" accept=".json" onchange="handleSaveLoad(event)" style="display:none">
+            <button class="modal-btn btn-neutral" onclick="closeSettings()">← BACK TO GAME</button>
+        </div>
+    </div>
 
-function handleSaveLoad(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        try {
-            const loaded = JSON.parse(ev.target.result);
-            state.points = loaded.points || 0;
-            state.totalClicks = loaded.totalClicks || 0;
-            state.clickPower = loaded.clickPower || 1;
-            state.cps = loaded.cps || 0;
-            UPGRADES.forEach(u => { state.upgrades[u.id] = loaded.upgrades?.[u.id] || 0; });
-            renderUpgrades();
-            updateUI();
-            closeSettings();
-            showNotif('SAVE LOADED!');
-        } catch {
-            showNotif('ERROR: INVALID SAVE FILE');
-        }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-}
+    <!-- CONFIRM RESTART MODAL -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <div class="modal-title" style="color:#ff4444;text-shadow:3px 3px 0 #880000;">⚠ WARNING</div>
+            <div class="confirm-text">ARE YOU SURE YOU WANT<br>TO RESTART?</div>
+            <div class="confirm-warn">ALL PROGRESS WILL BE LOST.<br>THIS CANNOT BE UNDONE.</div>
+            <div class="confirm-btns">
+                <button class="modal-btn btn-danger" style="text-align:center" onclick="doRestart()">YES, RESET</button>
+                <button class="modal-btn btn-neutral" style="text-align:center" onclick="closeConfirm()">CANCEL</button>
+            </div>
+        </div>
+    </div>
 
-// ─── NOTIFICATION ────────────────────────────────────────────────────────────
-function showNotif(msg) {
-    const n = document.createElement('div');
-    n.className = 'notif';
-    n.textContent = '▶ ' + msg;
-    document.body.appendChild(n);
-    setTimeout(() => n.remove(), 2500);
-}
+    <!-- CONFIRM PRESTIGE MODAL -->
+    <div class="modal-overlay" id="prestigeModal">
+        <div class="modal">
+            <div class="modal-title" style="color:#ffd700;text-shadow:3px 3px 0 #886000;">✨ PRESTIGE</div>
+            <div class="confirm-text">RESET EVERYTHING FOR A<br>PERMANENT +25% MULTIPLIER?</div>
+            <div class="confirm-warn">POINTS & UPGRADES WILL RESET.<br>ACHIEVEMENTS STAY FOREVER.</div>
+            <div class="confirm-btns">
+                <button class="modal-btn btn-prestige" style="text-align:center" onclick="doPrestige()">YES,
+                    PRESTIGE!</button>
+                <button class="modal-btn btn-neutral" style="text-align:center"
+                    onclick="closePrestige()">CANCEL</button>
+            </div>
+        </div>
+    </div>
 
-// ─── UPDATE POLLING (GitHub Pages — no backend needed) ───────────────────────
-// Polls the GitHub API for the latest commit SHA on clickmaster.html.
-const GITHUB_USER = 'C0demachine';
-const GITHUB_REPO = 'clickmaster';   // change if your repo is named differently
-const GITHUB_FILE = 'clickmaster.html';
-const GITHUB_API  = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/commits?path=${GITHUB_FILE}&per_page=1`;
-
-let updateAvailable = false;
-let knownSHA = null;   // SHA of the version currently loaded in the browser
-
-async function checkForUpdate() {
-    try {
-        const res = await fetch(GITHUB_API, {
-            cache: 'no-store',
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if (!res.ok) return;
-        const commits = await res.json();
-        if (!commits.length) return;
-
-        const latestSHA = commits[0].sha;
-        const latestDate = new Date(commits[0].commit.author.date).toLocaleString();
-
-        // First run — record what SHA we loaded with
-        if (knownSHA === null) {
-            knownSHA = latestSHA;
-            return;
-        }
-
-        const btn = document.getElementById('updateBtn');
-        if (latestSHA !== knownSHA && !updateAvailable) {
-            updateAvailable = true;
-            btn.textContent = '▲ UPDATE READY';
-            btn.classList.add('has-update');
-            btn.title = `New version pushed ${latestDate} — click to reload`;
-            showNotif('UPDATE AVAILABLE — TAP UPDATE READY!');
-        }
-    } catch (e) {
-        // Network error or not yet on GitHub — silently ignore
-    }
-}
-
-async function applyUpdate() {
-    if (!updateAvailable) return;
-    showNotif('RELOADING...');
-    // Hard reload — bypasses cache so the new version loads fresh
-    setTimeout(() => location.reload(true), 600);
-}
-
-// Poll every 30 seconds (GitHub API rate limit is 60 req/hr unauthenticated)
-setInterval(checkForUpdate, 30000);
-checkForUpdate();
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-window.onload = () => {
-    drawDefaultLogo();
-    renderUpgrades();
-    updateUI();
-};
-</script>
+    <script src="game.js"></script>
 
 </body>
+
 </html>
