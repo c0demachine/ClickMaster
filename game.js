@@ -15,6 +15,7 @@ let state = {
     achievementMultiplier: 1.0,
     achievements: {},
     lastTimestamp: Date.now(),
+    skin: 'default'
 };
 
 // ─── MANUAL UPGRADES ─────────────────────────────────────────────
@@ -220,8 +221,39 @@ function drawDefaultLogo() {
 function handleLogoUpload(e) {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => { document.getElementById('clickBtn').innerHTML = `<img src="${ev.target.result}" alt="logo">`; };
+    reader.onload = ev => {
+        document.getElementById('clickBtn').innerHTML = `<img src="${ev.target.result}" alt="logo">`;
+        state.customLogo = ev.target.result;
+    };
     reader.readAsDataURL(file);
+}
+
+function toggleSkin() {
+    state.skin = state.skin === 'default' ? 'cookie' : 'default';
+    applySkin();
+    autoSave();
+    showNotif(`SKIN CHANGED TO ${state.skin.toUpperCase()}`);
+}
+
+function applySkin() {
+    const body = document.body;
+    const btn = document.getElementById('clickBtn');
+    const skinDesc = document.getElementById('skinDesc');
+
+    if (state.skin === 'cookie') {
+        body.classList.add('skin-cookie');
+        if (!state.customLogo) {
+            btn.innerHTML = `<img src="assets/cookie_logo.png" alt="cookie">`;
+        }
+        if (skinDesc) skinDesc.textContent = "Current: COOKIE (Click to switch)";
+    } else {
+        body.classList.remove('skin-cookie');
+        if (!state.customLogo) {
+            btn.innerHTML = '<canvas id="defaultLogo" width="120" height="120"></canvas>';
+            drawDefaultLogo();
+        }
+        if (skinDesc) skinDesc.textContent = "Current: DEFAULT (Click to switch)";
+    }
 }
 
 // ─── CLICK HANDLER ────────────────────────────────────────────────
@@ -272,11 +304,30 @@ setInterval(() => {
     if (state.cps > 0) {
         state.points += state.cps * dt * getTotalMultiplier();
         cpsAccum += state.cps * dt;
-        if (cpsAccum >= 1) {
-            cpsAccum = 0;
-            const btn = document.getElementById('clickBtn');
-            btn.classList.remove('auto-ping'); void btn.offsetWidth; btn.classList.add('auto-ping');
+
+        const btn = document.getElementById('clickBtn');
+
+        // High CPS handling (e.g. > 10 CPS): 
+        // Use a continuous subtle glow instead of discrete pulses.
+        if (state.cps >= 10) {
+            btn.classList.add('working');
+            btn.classList.remove('auto-ping');
+        } else {
+            btn.classList.remove('working');
+            // Low CPS handling: ping discrete times for each "click"
+            if (cpsAccum >= 1) {
+                cpsAccum = 0;
+                if (!btn.classList.contains('auto-ping')) {
+                    btn.classList.add('auto-ping');
+                    btn.addEventListener('animationend', () => {
+                        btn.classList.remove('auto-ping');
+                    }, { once: true });
+                }
+            }
         }
+    } else {
+        const btn = document.getElementById('clickBtn');
+        if (btn) btn.classList.remove('working', 'auto-ping');
     }
     updateUI();
 }, 50);
@@ -508,9 +559,8 @@ function doPrestige() {
     MANUAL_UPGRADES.forEach(u => { state.manualUpgrades[u.id] = 0; });
     AUTO_UPGRADES.forEach(u => { state.autoUpgrades[u.id] = 0; });
     recalcTotals();
-    const btn = document.getElementById('clickBtn');
-    btn.innerHTML = '<canvas id="defaultLogo" width="120" height="120"></canvas>';
-    drawDefaultLogo();
+    state.customLogo = null;
+    applySkin();
     renderUpgrades();
     renderAchievements();
     updateUI();
@@ -531,9 +581,10 @@ function doRestart() {
     MANUAL_UPGRADES.forEach(u => { state.manualUpgrades[u.id] = 0; });
     AUTO_UPGRADES.forEach(u => { state.autoUpgrades[u.id] = 0; });
     ACHIEVEMENTS.forEach(a => { state.achievements[a.id] = false; });
-    const btn = document.getElementById('clickBtn');
-    btn.innerHTML = '<canvas id="defaultLogo" width="120" height="120"></canvas>';
-    drawDefaultLogo(); renderUpgrades(); renderAchievements(); updateUI();
+    state.skin = 'default';
+    state.customLogo = null;
+    applySkin();
+    renderUpgrades(); renderAchievements(); updateUI();
     showNotif('GAME RESET. START OVER.');
 }
 
@@ -562,7 +613,9 @@ function handleSaveLoad(e) {
             MANUAL_UPGRADES.forEach(u => { state.manualUpgrades[u.id] = loaded.manualUpgrades?.[u.id] || 0; });
             AUTO_UPGRADES.forEach(u => { state.autoUpgrades[u.id] = loaded.autoUpgrades?.[u.id] || 0; });
             ACHIEVEMENTS.forEach(a => { state.achievements[a.id] = loaded.achievements?.[a.id] || false; });
-            recalcTotals(); renderUpgrades(); renderAchievements(); updateUI();
+            state.skin = loaded.skin || 'default';
+            state.customLogo = loaded.customLogo || null;
+            recalcTotals(); applySkin(); renderUpgrades(); renderAchievements(); updateUI();
             closeSettings();
             showNotif('SAVE LOADED!');
         } catch { showNotif('ERROR: INVALID SAVE FILE'); }
@@ -683,7 +736,7 @@ checkForUpdate();
 function initGame() {
     const loaded = autoLoad();
     document.getElementById('soundBtn').textContent = soundMuted ? '🔇' : '🔊';
-    drawDefaultLogo();
+    applySkin();
 
     if (!loaded) {
         // Fresh start defaults if no save exists

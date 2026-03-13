@@ -1,0 +1,20 @@
+{
+  "name": "clickmaster",
+  "version": "1.0.0",
+  "description": "A high-performance incremental clicker game.",
+  "main": "game.js",
+  "scripts": {
+    "start": "python3 -m http.server 3000",
+    "dev": "python3 -m http.server 3000"
+  },
+  "keywords": [
+    "clicker",
+    "incremental",
+    "game"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
