@@ -1,0 +1,189 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  CLICKMASTER — FEEDBACK BUTTON SNIPPET                      ║
+  ║  Paste into index.html settings modal + style.css + game.js ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+  STEP 1: In index.html, find the settings modal buttons and add
+  this button BEFORE the "← BACK TO GAME" button:
+
+    <button class="modal-btn btn-feedback" onclick="openFeedback()">
+      💬 SEND FEEDBACK
+      <div class="modal-desc">Report a bug or suggest a feature.</div>
+    </button>
+
+  ─────────────────────────────────────────────────────────────────
+  STEP 2: Also in index.html, paste this entire modal block
+  AFTER the closing </div> of the confirmModal:
+-->
+
+<!-- FEEDBACK MODAL -->
+
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--accent);text-shadow:2px 2px 0 #00884a;">💬 FEEDBACK</div>
+    <button class="modal-close" onclick="closeFeedback()">✕</button>
+
+```
+<div style="margin-bottom:12px;">
+  <div style="font-size:7px;color:var(--dim);margin-bottom:8px;line-height:2;">TYPE:</div>
+  <div style="display:flex;gap:8px;">
+    <button class="feedback-type-btn active" id="fbTypeBug"     onclick="setFeedbackType('bug')">🐛 BUG</button>
+    <button class="feedback-type-btn"        id="fbTypeIdea"    onclick="setFeedbackType('idea')">💡 IDEA</button>
+    <button class="feedback-type-btn"        id="fbTypeOther"   onclick="setFeedbackType('other')">💬 OTHER</button>
+  </div>
+</div>
+
+<div style="margin-bottom:12px;">
+  <div style="font-size:7px;color:var(--dim);margin-bottom:8px;line-height:2;">MESSAGE:</div>
+  <textarea
+    id="feedbackText"
+    placeholder="Type your feedback here..."
+    style="
+      width:100%; height:100px;
+      background:var(--panel2);
+      border:2px solid var(--border2);
+      color:var(--text);
+      font-family:'Press Start 2P',monospace;
+      font-size:7px;
+      padding:10px;
+      resize:none;
+      line-height:1.8;
+      outline:none;
+    "
+    onfocus="this.style.borderColor='var(--accent)'"
+    onblur="this.style.borderColor='var(--border2)'"
+  ></textarea>
+</div>
+
+<div style="font-size:6px;color:var(--dim);margin-bottom:14px;line-height:2;" id="feedbackCharCount">0 / 300 characters</div>
+
+<div style="display:flex;gap:10px;">
+  <button class="modal-btn btn-feedback-send" style="flex:1;text-align:center;margin-bottom:0;" onclick="submitFeedback()">
+    ✓ SUBMIT
+  </button>
+  <button class="modal-btn btn-neutral" style="flex:1;text-align:center;margin-bottom:0;" onclick="closeFeedback()">
+    ✕ CANCEL
+  </button>
+</div>
+```
+
+  </div>
+</div>
+
+<!--
+  ─────────────────────────────────────────────────────────────────
+  STEP 3: Add these styles to style.css
+-->
+
+<style>
+.btn-feedback {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 3px 3px 0 #00884a;
+}
+.btn-feedback:hover { box-shadow: 4px 4px 0 #00884a; }
+
+.feedback-type-btn {
+  flex: 1;
+  background: var(--panel2);
+  border: 2px solid var(--border2);
+  color: var(--dim);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 8px 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.feedback-type-btn:hover  { border-color: var(--accent); color: var(--text); }
+.feedback-type-btn.active { border-color: var(--accent); color: var(--accent); box-shadow: 2px 2px 0 #00884a; }
+
+.btn-feedback-send {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 3px 3px 0 #00884a;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  padding: 14px;
+  background: var(--panel2);
+  border-width: 3px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.btn-feedback-send:hover  { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #00884a; }
+.btn-feedback-send:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #00884a; }
+</style>
+
+<!--
+  ─────────────────────────────────────────────────────────────────
+  STEP 4: Add these functions to game.js
+-->
+
+<script>
+let feedbackType = 'bug';
+
+function openFeedback() {
+  closeSettings();
+  document.getElementById('feedbackModal').classList.add('open');
+  document.getElementById('feedbackText').value = '';
+  document.getElementById('feedbackCharCount').textContent = '0 / 300 characters';
+  setFeedbackType('bug');
+
+  // Live character counter
+  document.getElementById('feedbackText').oninput = function() {
+    const len = Math.min(this.value.length, 300);
+    this.value = this.value.slice(0, 300);
+    document.getElementById('feedbackCharCount').textContent = len + ' / 300 characters';
+    document.getElementById('feedbackCharCount').style.color = len >= 280 ? '#ff4444' : 'var(--dim)';
+  };
+}
+
+function closeFeedback() {
+  document.getElementById('feedbackModal').classList.remove('open');
+}
+
+function setFeedbackType(type) {
+  feedbackType = type;
+  ['bug','idea','other'].forEach(t => {
+    document.getElementById('fbType' + t.charAt(0).toUpperCase() + t.slice(1))
+      .classList.toggle('active', t === type);
+  });
+}
+
+function submitFeedback() {
+  const text = document.getElementById('feedbackText').value.trim();
+  if (!text) {
+    showNotif('PLEASE WRITE SOMETHING FIRST!');
+    return;
+  }
+
+  // Save feedback to localStorage (history of all submitted feedback)
+  const feedbackLog = JSON.parse(localStorage.getItem('cm_feedback') || '[]');
+  feedbackLog.push({
+    type: feedbackType,
+    message: text,
+    date: new Date().toISOString(),
+    points: Math.floor(state.points),
+    prestige: state.prestigeCount,
+  });
+  localStorage.setItem('cm_feedback', JSON.stringify(feedbackLog));
+
+  closeFeedback();
+  showNotif('✓ FEEDBACK SAVED — THANKS!', 'gold');
+}
+</script>
+
+<!--
+  ════════════════════════════════════════════════════════════════
+  NOTE: Feedback is stored locally in localStorage under the key
+  "cm_feedback". To send it to a real server, replace the
+  localStorage.setItem block in submitFeedback() with a fetch()
+  POST to your own endpoint, e.g.:
+
+    await fetch('https://your-server.com/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: feedbackType, message: text })
+    });
+  ════════════════════════════════════════════════════════════════
+-->
