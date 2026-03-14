@@ -108,6 +108,20 @@
                 ⚠ RESTART
                 <div class="modal-desc">Wipe all progress. No going back.</div>
             </button>
+            <button class="modal-btn btn-neutral" onclick="toggleClickerVisibility()" id="hideClickerBtn">
+                👁 HIDE CLICKER
+                <div class="modal-desc">Toggle the main clicker area visibility.</div>
+            </button>
+            <div style="display: flex; gap: 8px;">
+                <button class="modal-btn btn-neutral" style="flex:1" onclick="setHardSave()">
+                    📌 HARD SAVE
+                    <div class="modal-desc">Create a permanent restore point.</div>
+                </button>
+                <button class="modal-btn btn-neutral" style="flex:1" onclick="loadHardSave()">
+                    🔄 RESTORE
+                    <div class="modal-desc">Load your hard save point.</div>
+                </button>
+            </div>
             <button class="modal-btn btn-neutral" onclick="toggleSkin()">
                 🎨 CHANGE SKIN
                 <div class="modal-desc" id="skinDesc">Switch between Default and Cookie skins.</div>
@@ -149,6 +163,7 @@
         </div>
     </div>
 
+    <script src="upgrades.js"></script>
     <script src="game.js"></script>
 
 </body>

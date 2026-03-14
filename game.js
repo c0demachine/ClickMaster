@@ -1,7 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-//  CLICKMASTER — game.js  (with achievements, prestige, leaderboard, sound)
-// ═══════════════════════════════════════════════════════════════
-
 // ─── STATE ───────────────────────────────────────────────────────
 let state = {
     points: 0,
@@ -15,119 +11,23 @@ let state = {
     achievementMultiplier: 1.0,
     achievements: {},
     lastTimestamp: Date.now(),
-    skin: 'default'
+    skin: 'default',
+    showClicker: true
 };
 
-// ─── MANUAL UPGRADES ─────────────────────────────────────────────
-const MANUAL_UPGRADES = [
-    { id: 'm_thicker', name: 'THICKER FINGER', icon: '👆', desc: 'Press harder.', baseCost: 15, clickBonus: 1 },
-    { id: 'm_glove', name: 'CLICK GLOVE', icon: '🧤', desc: 'Extra grip.', baseCost: 40, clickBonus: 1 },
-    { id: 'm_nail', name: 'LONG NAIL', icon: '💅', desc: 'Precision nail.', baseCost: 100, clickBonus: 2 },
-    { id: 'm_knuckle', name: 'IRON KNUCKLE', icon: '✊', desc: 'Reinforced knuckle.', baseCost: 250, clickBonus: 2 },
-    { id: 'm_pen', name: 'STYLUS PEN', icon: '🖊️', desc: 'Capacitive tip.', baseCost: 500, clickBonus: 3 },
-    { id: 'm_hammer', name: 'CLICK HAMMER', icon: '🔨', desc: 'Hammer the button.', baseCost: 1000, clickBonus: 4 },
-    { id: 'm_drill', name: 'POWER DRILL', icon: '🔩', desc: 'Drill click.', baseCost: 2000, clickBonus: 5 },
-    { id: 'm_sword', name: 'CLICK SWORD', icon: '⚔️', desc: 'Slice through.', baseCost: 4000, clickBonus: 6 },
-    { id: 'm_bolt', name: 'LIGHTNING BOLT', icon: '⚡', desc: 'Electric click.', baseCost: 8000, clickBonus: 8 },
-    { id: 'm_fist', name: 'MEGA FIST', icon: '🤜', desc: 'Unstoppable.', baseCost: 15000, clickBonus: 10 },
-    { id: 'm_laser', name: 'LASER POINTER', icon: '🔴', desc: 'Precise laser.', baseCost: 30000, clickBonus: 12 },
-    { id: 'm_atom', name: 'ATOM SMASHER', icon: '⚛️', desc: 'Sub-atomic clicking.', baseCost: 60000, clickBonus: 15 },
-    { id: 'm_magnet', name: 'CLICK MAGNET', icon: '🧲', desc: 'Attracts power.', baseCost: 120000, clickBonus: 18 },
-    { id: 'm_plasma', name: 'PLASMA FIST', icon: '🌀', desc: 'Plasma infused.', baseCost: 250000, clickBonus: 22 },
-    { id: 'm_quantum', name: 'QUANTUM CLICKER', icon: '🔬', desc: 'Superposition.', baseCost: 500000, clickBonus: 30 },
-    { id: 'm_comet', name: 'COMET STRIKE', icon: '☄️', desc: 'Comet energy.', baseCost: 1e6, clickBonus: 40 },
-    { id: 'm_nova', name: 'SUPERNOVA PUNCH', icon: '💥', desc: 'Star-level force.', baseCost: 2e6, clickBonus: 55 },
-    { id: 'm_black', name: 'BLACK HOLE TAP', icon: '🕳️', desc: 'Gravitational click.', baseCost: 5e6, clickBonus: 75 },
-    { id: 'm_galaxy', name: 'GALAXY CRUSHER', icon: '🌌', desc: 'Galaxy-scale power.', baseCost: 10e6, clickBonus: 100 },
-    { id: 'm_god', name: 'CLICK DEITY', icon: '👁️', desc: 'Transcend reality.', baseCost: 25e6, clickBonus: 150 },
-    { id: 'm_infinity', name: 'INFINITY CLICK', icon: '♾️', desc: 'Click without limit.', baseCost: 50e6, clickBonus: 200 },
-    { id: 'm_void', name: 'VOID STRIKE', icon: '🌑', desc: 'Erase existence.', baseCost: 100e6, clickBonus: 300 },
-    { id: 'm_time', name: 'TIME CLICKER', icon: '⏳', desc: 'Click through time.', baseCost: 250e6, clickBonus: 500 },
-    { id: 'm_omega', name: 'OMEGA FINGER', icon: '🔱', desc: 'The final upgrade.', baseCost: 500e6, clickBonus: 750 },
-    { id: 'm_big', name: 'THE BIG CLICK', icon: '💠', desc: 'Click that ends all.', baseCost: 1e9, clickBonus: 1000 },
-];
+// ─── UPGRADES LOADED FROM upgrades.js ─────────────────────────────
 
-// ─── AUTO UPGRADES ────────────────────────────────────────────────
-const AUTO_UPGRADES = [
-    { id: 'a_cursor', name: 'AUTO CURSOR', icon: '🖱️', desc: 'A cursor clicks for you.', baseCost: 15, cpsBonus: 1 },
-    { id: 'a_ant', name: 'CLICK ANT', icon: '🐜', desc: 'Tiny but tireless.', baseCost: 50, cpsBonus: 1 },
-    { id: 'a_mouse', name: 'CLICK MOUSE', icon: '🐭', desc: 'Rodent precision.', baseCost: 120, cpsBonus: 2 },
-    { id: 'a_bot', name: 'CLICK BOT', icon: '🤖', desc: 'Mediocre robot.', baseCost: 300, cpsBonus: 2 },
-    { id: 'a_drone', name: 'CLICK DRONE', icon: '🚁', desc: 'Aerial clicker.', baseCost: 700, cpsBonus: 3 },
-    { id: 'a_script', name: 'CLICK SCRIPT', icon: '📜', desc: 'Shoddy automation.', baseCost: 1500, cpsBonus: 4 },
-    { id: 'a_macro', name: 'CLICK MACRO', icon: '⌨️', desc: 'Keyboard macro.', baseCost: 3000, cpsBonus: 5 },
-    { id: 'a_virus', name: 'CLICK VIRUS', icon: '🦠', desc: 'Spreads clicks.', baseCost: 6000, cpsBonus: 6 },
-    { id: 'a_ai', name: 'CLICK AI', icon: '🧠', desc: 'Neural net clicking.', baseCost: 12000, cpsBonus: 8 },
-    { id: 'a_server', name: 'CLICK SERVER', icon: '🖥️', desc: 'Dedicated server.', baseCost: 25000, cpsBonus: 10 },
-    { id: 'a_factory', name: 'CLICK FACTORY', icon: '🏭', desc: 'Mass production.', baseCost: 50000, cpsBonus: 15 },
-    { id: 'a_mine', name: 'CLICK MINE', icon: '⛏️', desc: 'Mines for clicks.', baseCost: 100000, cpsBonus: 20 },
-    { id: 'a_reactor', name: 'CLICK REACTOR', icon: '☢️', desc: 'Nuclear-powered.', baseCost: 200000, cpsBonus: 25 },
-    { id: 'a_grid', name: 'POWER GRID', icon: '⚡', desc: 'Citywide click grid.', baseCost: 400000, cpsBonus: 35 },
-    { id: 'a_satellite', name: 'CLICK SATELLITE', icon: '🛰️', desc: 'Orbital click array.', baseCost: 800000, cpsBonus: 50 },
-    { id: 'a_portal', name: 'CLICK PORTAL', icon: '🌀', desc: 'Portal dimension clicks.', baseCost: 1.5e6, cpsBonus: 65 },
-    { id: 'a_nano', name: 'NANOBOT SWARM', icon: '🔬', desc: 'Microscopic clickers.', baseCost: 3e6, cpsBonus: 80 },
-    { id: 'a_warp', name: 'WARP ENGINE', icon: '🚀', desc: 'FTL click delivery.', baseCost: 6e6, cpsBonus: 100 },
-    { id: 'a_hive', name: 'CLICK HIVEMIND', icon: '🐝', desc: 'Collective clicking.', baseCost: 12e6, cpsBonus: 130 },
-    { id: 'a_matrix', name: 'CLICK MATRIX', icon: '💾', desc: 'Simulated click farm.', baseCost: 25e6, cpsBonus: 160 },
-    { id: 'a_star', name: 'CLICK STAR', icon: '⭐', desc: 'Stellar click energy.', baseCost: 50e6, cpsBonus: 200 },
-    { id: 'a_pulsar', name: 'PULSAR ARRAY', icon: '💫', desc: 'Rhythmic neutron star.', baseCost: 100e6, cpsBonus: 250 },
-    { id: 'a_rift', name: 'CLICK RIFT', icon: '🌌', desc: 'Tears spacetime.', baseCost: 200e6, cpsBonus: 320 },
-    { id: 'a_universe', name: 'UNIVERSE ENGINE', icon: '🌍', desc: 'Whole universe clicks.', baseCost: 400e6, cpsBonus: 400 },
-    { id: 'a_god', name: 'CLICK PANTHEON', icon: '👁️', desc: 'Gods click for you.', baseCost: 1e9, cpsBonus: 500 },
-    { id: 'a_dream', name: 'DREAM CLICKER', icon: '💤', desc: 'Clicks while you sleep.', baseCost: 2e9, cpsBonus: 650 },
-    { id: 'a_omega', name: 'OMEGA ARRAY', icon: '🔱', desc: 'Final click system.', baseCost: 5e9, cpsBonus: 800 },
-];
-
-// ─── ACHIEVEMENTS ─────────────────────────────────────────────────
-// Each unlocked achievement permanently multiplies ALL earnings.
-// achievementMultiplier = product of all unlocked multipliers.
-// Achievement multipliers SURVIVE prestige resets.
-const ACHIEVEMENTS = [
-    // Click milestones
-    { id: 'ac_first', name: 'FIRST CLICK', icon: '🖱️', desc: 'Click once.', condition: s => s.totalClicks >= 1, multiplier: 1.05 },
-    { id: 'ac_50', name: 'CLICK APPRENTICE', icon: '👆', desc: '50 total clicks.', condition: s => s.totalClicks >= 50, multiplier: 1.05 },
-    { id: 'ac_500', name: 'CLICK JOURNEYMAN', icon: '✊', desc: '500 total clicks.', condition: s => s.totalClicks >= 500, multiplier: 1.1 },
-    { id: 'ac_5k', name: 'CLICK MASTER', icon: '💥', desc: '5,000 total clicks.', condition: s => s.totalClicks >= 5000, multiplier: 1.1 },
-    { id: 'ac_50k', name: 'CLICK LEGEND', icon: '⚡', desc: '50,000 total clicks.', condition: s => s.totalClicks >= 50000, multiplier: 1.15 },
-    { id: 'ac_500k', name: 'CLICK DEITY', icon: '👁️', desc: '500,000 total clicks.', condition: s => s.totalClicks >= 500000, multiplier: 1.2 },
-    // Points milestones
-    { id: 'ac_p100', name: 'POCKET CHANGE', icon: '🌱', desc: 'Earn 100 points.', condition: s => s.points >= 100, multiplier: 1.05 },
-    { id: 'ac_p10k', name: 'GETTING RICH', icon: '💰', desc: 'Earn 10,000 points.', condition: s => s.points >= 10000, multiplier: 1.1 },
-    { id: 'ac_p1m', name: 'CLICK MILLIONAIRE', icon: '🏦', desc: 'Earn 1,000,000 points.', condition: s => s.points >= 1e6, multiplier: 1.15 },
-    { id: 'ac_p1b', name: 'CLICK BILLIONAIRE', icon: '💎', desc: 'Earn 1,000,000,000 points.', condition: s => s.points >= 1e9, multiplier: 1.2 },
-    { id: 'ac_p1t', name: 'CLICK TRILLIONAIRE', icon: '🌌', desc: 'Earn 1,000,000,000,000 points.', condition: s => s.points >= 1e12, multiplier: 1.25 },
-    // Upgrade milestones
-    { id: 'ac_buy1', name: 'FIRST PURCHASE', icon: '🛒', desc: 'Buy any upgrade.', condition: s => totalOwned(s) >= 1, multiplier: 1.05 },
-    { id: 'ac_buy10', name: 'SHOP ADDICT', icon: '🏪', desc: 'Own 10 upgrades total.', condition: s => totalOwned(s) >= 10, multiplier: 1.1 },
-    { id: 'ac_buy50', name: 'UPGRADE FACTORY', icon: '🏭', desc: 'Own 50 upgrades total.', condition: s => totalOwned(s) >= 50, multiplier: 1.15 },
-    { id: 'ac_buy100', name: 'UPGRADE ROYALTY', icon: '👑', desc: 'Own 100 upgrades total.', condition: s => totalOwned(s) >= 100, multiplier: 1.2 },
-    // CPS milestones
-    { id: 'ac_cps1', name: 'FIRST BOT', icon: '🤖', desc: 'Reach 1 CPS.', condition: s => s.cps >= 1, multiplier: 1.05 },
-    { id: 'ac_cps100', name: 'CLICK MACHINE', icon: '⚙️', desc: 'Reach 100 CPS.', condition: s => s.cps >= 100, multiplier: 1.1 },
-    { id: 'ac_cps10k', name: 'CLICK ROCKET', icon: '🚀', desc: 'Reach 10,000 CPS.', condition: s => s.cps >= 10000, multiplier: 1.15 },
-    { id: 'ac_cps1m', name: 'CLICK SUPERNOVA', icon: '🌟', desc: 'Reach 1,000,000 CPS.', condition: s => s.cps >= 1000000, multiplier: 1.2 },
-    // Prestige milestones
-    { id: 'ac_pr1', name: 'FIRST PRESTIGE', icon: '🔄', desc: 'Prestige once.', condition: s => s.prestigeCount >= 1, multiplier: 1.1 },
-    { id: 'ac_pr5', name: 'PRESTIGE MASTER', icon: '♾️', desc: 'Prestige 5 times.', condition: s => s.prestigeCount >= 5, multiplier: 1.2 },
-    { id: 'ac_pr10', name: 'PRESTIGE LEGEND', icon: '🌀', desc: 'Prestige 10 times.', condition: s => s.prestigeCount >= 10, multiplier: 1.3 },
-    // Speed milestone
-    { id: 'ac_speed', name: 'SPEED CLICKER', icon: '⚡', desc: 'Click 10 times in 3 seconds.', condition: s => s._speedAchieved === true, multiplier: 1.1 },
-];
-
-function totalOwned(s) {
-    let t = 0;
-    MANUAL_UPGRADES.forEach(u => { t += s.manualUpgrades[u.id] || 0; });
-    AUTO_UPGRADES.forEach(u => { t += s.autoUpgrades[u.id] || 0; });
-    return t;
-}
 
 // Speed click tracker
 let recentClicks = [];
 
 // ─── INIT STATE ───────────────────────────────────────────────────
-MANUAL_UPGRADES.forEach(u => { state.manualUpgrades[u.id] = 0; });
-AUTO_UPGRADES.forEach(u => { state.autoUpgrades[u.id] = 0; });
-ACHIEVEMENTS.forEach(a => { state.achievements[a.id] = false; });
+function ensureStateDefaults() {
+    MANUAL_UPGRADES.forEach(u => { if (state.manualUpgrades[u.id] === undefined) state.manualUpgrades[u.id] = 0; });
+    AUTO_UPGRADES.forEach(u => { if (state.autoUpgrades[u.id] === undefined) state.autoUpgrades[u.id] = 0; });
+    ACHIEVEMENTS.forEach(a => { if (state.achievements[a.id] === undefined) state.achievements[a.id] = false; });
+}
+ensureStateDefaults();
 
 // ─── MULTIPLIER ───────────────────────────────────────────────────
 function getTotalMultiplier() {
@@ -253,6 +153,24 @@ function applySkin() {
             drawDefaultLogo();
         }
         if (skinDesc) skinDesc.textContent = "Current: DEFAULT (Click to switch)";
+    }
+    applyClickerVisibility();
+}
+
+function toggleClickerVisibility() {
+    state.showClicker = !state.showClicker;
+    applyClickerVisibility();
+    autoSave();
+}
+
+function applyClickerVisibility() {
+    const area = document.querySelector('.clicker-area');
+    if (!area) return;
+    area.classList.toggle('hidden-clicker', !state.showClicker);
+    const btn = document.getElementById('hideClickerBtn');
+    if (btn) {
+        btn.innerHTML = state.showClicker ? '👁 HIDE CLICKER' : '👁 SHOW CLICKER';
+        btn.querySelector('.modal-desc').textContent = state.showClicker ? 'Hide the clicker to save space.' : 'Bring back the clicker.';
     }
 }
 
@@ -626,7 +544,47 @@ function handleSaveLoad(e) {
 // ─── OFFLINE & AUTO-SAVE ──────────────────────────────────────────
 function autoSave() {
     state.lastTimestamp = Date.now();
-    localStorage.setItem('cm_local_save', JSON.stringify(state));
+    const saveString = JSON.stringify(state);
+    
+    // Safety check: verify the string is valid JSON before overwriting the main save
+    try {
+        JSON.parse(saveString);
+        // If we got here, the save data is valid.
+        localStorage.setItem('cm_local_save', saveString);
+    } catch (e) {
+        console.error('Critical: Failed to generate valid save string. Auto-save aborted.', e);
+    }
+}
+
+function setHardSave() {
+    state.lastTimestamp = Date.now();
+    localStorage.setItem('cm_hard_save', JSON.stringify(state));
+    showNotif('HARD SAVE POINT CREATED!', 'gold');
+    playPurchaseSound();
+}
+
+function loadHardSave() {
+    const raw = localStorage.getItem('cm_hard_save');
+    if (!raw) {
+        showNotif('NO HARD SAVE FOUND!');
+        return;
+    }
+    if (!confirm('Are you sure? This will overwrite your current progress with your hard save point.')) return;
+    
+    try {
+        const loaded = JSON.parse(raw);
+        Object.assign(state, loaded);
+        ensureStateDefaults();
+        recalcTotals();
+        applySkin();
+        renderUpgrades();
+        renderAchievements();
+        updateUI();
+        closeSettings();
+        showNotif('HARD SAVE RESTORED!', 'gold');
+    } catch (e) {
+        showNotif('ERROR LOADING HARD SAVE');
+    }
 }
 
 function autoLoad() {
@@ -636,6 +594,7 @@ function autoLoad() {
         const loaded = JSON.parse(raw);
         // Update state with loaded data
         Object.assign(state, loaded);
+        ensureStateDefaults();
 
         // Calculate AFK earnings
         const now = Date.now();
@@ -657,8 +616,8 @@ function autoLoad() {
     }
 }
 
-// Auto-save every 30s and on close
-setInterval(autoSave, 30000);
+// Auto-save every 1s and on close
+setInterval(autoSave, 1000);
 window.addEventListener('beforeunload', autoSave);
 
 // ─── NOTIFICATION ─────────────────────────────────────────────────

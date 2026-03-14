@@ -234,6 +234,75 @@ header .subtitle {
     min-height: calc(100vh - 90px);
 }
 
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .game-wrap {
+        flex-direction: column;
+        padding: 10px;
+        min-height: auto;
+    }
+
+    .clicker-panel {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: none;
+    }
+
+    .click-btn {
+        width: 140px;
+        height: 140px;
+    }
+
+    .click-btn img {
+        width: 100px;
+        height: 100px;
+    }
+
+    header h1 {
+        font-size: 16px;
+    }
+
+    header .subtitle {
+        font-size: 6px;
+    }
+}
+
+@media (max-width: 600px) {
+    header {
+        flex-direction: column;
+        gap: 12px;
+        padding-top: 50px;
+        /* leave space for fixed title */
+    }
+
+    header .title-group {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+    }
+
+    .tab-btn {
+        font-size: 6px;
+        padding: 8px 4px;
+    }
+
+    .upgrade-name {
+        font-size: 8px;
+    }
+
+    .upgrade-desc {
+        font-size: 6px;
+    }
+
+    .modal {
+        width: 100%;
+        padding: 15px;
+        border-width: 3px;
+    }
+}
+
 .clicker-panel {
     flex: 0 0 320px;
     display: flex;
@@ -302,6 +371,16 @@ header .subtitle {
     text-align: center;
     position: relative;
     overflow: hidden;
+    transition: opacity 0.3s, max-height 0.3s, transform 0.3s, padding 0.3s;
+}
+
+.clicker-area.hidden-clicker {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+    transform: scaleY(0);
 }
 
 .logo-hint {
