@@ -322,9 +322,9 @@ function updateUI() {
 // ─── RENDER UPGRADES ──────────────────────────────────────────────
 function renderUpgrades() {
     renderUpgradeTab('manualGrid', MANUAL_UPGRADES, 'manual',
-        ['TIER 1 — STARTER', 'TIER 2 — TOOLS', 'TIER 3 — SCIENCE', 'TIER 4 — COSMIC', 'TIER 5 — LEGENDARY'], 5);
+        ['TIER 1 — MUNDANE', 'TIER 2 — REINFORCED', 'TIER 3 — SCIENCE', 'TIER 4 — COSMIC', 'TIER 5 — ADVANCED', 'TIER 6 — MYTHICAL', 'TIER 7 — DIVINE', 'TIER 8 — OMNIPOTENT', 'TIER 9 — TRANSCENDENT', 'TIER 10 — ABSOLUTE'], 11);
     renderUpgradeTab('autoGrid', AUTO_UPGRADES, 'auto',
-        ['TIER 1 — BEGINNER', 'TIER 2 — SCRIPTS', 'TIER 3 — INDUSTRIAL', 'TIER 4 — SCI-FI', 'TIER 5 — COSMIC', 'TIER 6 — TRANSCENDENT'], 5);
+        ['TIER 1 — BEGINNER', 'TIER 2 — SCRIPTS', 'TIER 3 — INDUSTRIAL', 'TIER 4 — ADVANCED', 'TIER 5 — SCI-FI', 'TIER 6 — COSMIC', 'TIER 7 — DIVINE', 'TIER 8 — ASTRAL', 'TIER 9 — TRANSCENDENT', 'TIER 10 — ABSOLUTE'], 11);
 }
 
 function renderUpgradeTab(gridId, list, tab, sectionNames, perSection) {
