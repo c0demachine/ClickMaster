@@ -1,14 +1,11 @@
-# Use a lightweight Python image
-FROM python:3.9-slim
+# Use a lightweight Nginx image
+FROM nginx:stable-alpine
 
-# Set the working directory inside the container
-WORKDIR /app
+# Copy the static files to the Nginx html directory
+COPY . /usr/share/nginx/html
 
-# Copy the local project files into the container
-COPY . .
+# Expose port 80
+EXPOSE 80
 
-# Expose the port that the application uses
-EXPOSE 3000
-
-# Start the simple HTTP server, matching the command in package.json
-CMD ["python3", "-m", "http.server", "3000"]
+# The default command for the nginx image is to start the server
+CMD ["nginx", "-g", "daemon off;"]

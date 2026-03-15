@@ -5,3 +5,8 @@ node_modules
 .DS_Store
 Dockerfile
 .dockerignore
+package.json
+package-lock.json
+LICENSE
+serve.sh
+README.md
