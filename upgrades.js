@@ -1,8 +1,13 @@
 // ─── UPGRADES CONFIGURATION ─────────────────────────────────────────
 
+// Initialize window globals early to avoid load-order issues
+window.MANUAL_UPGRADES = [];
+window.AUTO_UPGRADES = [];
+window.ACHIEVEMENTS = [];
+
 // ─── MANUAL UPGRADES (110 total, sorted by baseCost) ────────────────────────
 // Gap-fills added throughout early/mid ranges, continues scaling at high end.
-const MANUAL_UPGRADES = [
+var MANUAL_UPGRADES = [
 
     // ── Tier 1: Starter (1–18) — Dense early ladder ──
     { id: 'm_thicker',     name: 'THICKER FINGER',      icon: '👆',  desc: 'Press harder.',               baseCost: 15,       clickBonus: 1     },
@@ -124,10 +129,11 @@ const MANUAL_UPGRADES = [
     { id: 'm_perpetual',   name: 'PERPETUAL CLICK',     icon: '♾️',  desc: 'Never stops clicking.',       baseCost: 5e30,     clickBonus: 22e12 },
     { id: 'm_theonlyone',  name: 'THE ONLY CLICK',      icon: '🌟',  desc: 'One click. Everything.',      baseCost: 10e30,    clickBonus: 32e12 },
 ];
+window.MANUAL_UPGRADES = MANUAL_UPGRADES;
 
 // ─── AUTO UPGRADES (110 total, sorted by baseCost) ────────────────────────────
 // Gap-fills added throughout early/mid ranges, continues scaling at high end.
-const AUTO_UPGRADES = [
+var AUTO_UPGRADES = [
 
     // ── Tier 1: Starter (1–18) — Dense early ladder ──
     { id: 'a_cursor',      name: 'AUTO CURSOR',         icon: '🖱️',  desc: 'A cursor clicks for you.',    baseCost: 15,       cpsBonus: 1      },
@@ -244,6 +250,7 @@ const AUTO_UPGRADES = [
     { id: 'a_apex',        name: 'APEX AUTO-FARM',      icon: '🦅',  desc: 'Top of the food chain.',       baseCost: 50e27,    cpsBonus: 950e9  },
     { id: 'a_godhand',     name: 'GOD HAND ARRAY',      icon: '🫲',  desc: 'Divine hands never stop.',     baseCost: 100e27,   cpsBonus: 1.4e12 },
 ];
+window.AUTO_UPGRADES = AUTO_UPGRADES;
 
 function totalOwned(s) {
     let t = 0;
@@ -253,7 +260,7 @@ function totalOwned(s) {
 }
 
 // ─── ACHIEVEMENTS ─────────────────────────────────────────────────
-const ACHIEVEMENTS = [
+var ACHIEVEMENTS = [
 
     // ══════════════════════════════════════════════
     // 🖱️  CLICK COUNT ACHIEVEMENTS (52 total)
@@ -426,3 +433,4 @@ const ACHIEVEMENTS = [
     // ══════════════════════════════════════════════
     { id: 'ac_speed', name: 'SPEED CLICKER', icon: '⚡', desc: 'Click 10 times in 3 seconds.', condition: s => s._speedAchieved === true, multiplier: 1.1 },
 ];
+window.ACHIEVEMENTS = ACHIEVEMENTS;

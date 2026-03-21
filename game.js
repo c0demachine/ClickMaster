@@ -15,17 +15,25 @@ let state = {
     showClicker: true
 };
 
-// ─── UPGRADES LOADED FROM upgrades.js ─────────────────────────────
-
+var MANUAL_UPGRADES = window.MANUAL_UPGRADES || [];
+var AUTO_UPGRADES = window.AUTO_UPGRADES || [];
+var ACHIEVEMENTS = window.ACHIEVEMENTS || [];
 
 // Speed click tracker
 let recentClicks = [];
 
 // ─── INIT STATE ───────────────────────────────────────────────────
 function ensureStateDefaults() {
-    MANUAL_UPGRADES.forEach(u => { if (state.manualUpgrades[u.id] === undefined) state.manualUpgrades[u.id] = 0; });
-    AUTO_UPGRADES.forEach(u => { if (state.autoUpgrades[u.id] === undefined) state.autoUpgrades[u.id] = 0; });
-    ACHIEVEMENTS.forEach(a => { if (state.achievements[a.id] === undefined) state.achievements[a.id] = false; });
+    if (!window.MANUAL_UPGRADES || !window.AUTO_UPGRADES || !window.ACHIEVEMENTS) {
+        console.warn("Upgrades or Achievements not found on window. Retrying...");
+    }
+    const manual = window.MANUAL_UPGRADES || [];
+    const auto = window.AUTO_UPGRADES || [];
+    const ach = window.ACHIEVEMENTS || [];
+
+    manual.forEach(u => { if (state.manualUpgrades[u.id] === undefined) state.manualUpgrades[u.id] = 0; });
+    auto.forEach(u => { if (state.autoUpgrades[u.id] === undefined) state.autoUpgrades[u.id] = 0; });
+    ach.forEach(a => { if (state.achievements[a.id] === undefined) state.achievements[a.id] = false; });
 }
 ensureStateDefaults();
 
@@ -38,12 +46,19 @@ function getTotalMultiplier() {
 function getManualCost(upg) { return Math.floor(upg.baseCost * Math.pow(1.5, state.manualUpgrades[upg.id])); }
 function getAutoCost(upg) { return Math.floor(upg.baseCost * Math.pow(1.5, state.autoUpgrades[upg.id])); }
 
-// ─── RECALC ───────────────────────────────────────────────────────
 function recalcTotals() {
     state.clickPower = 1;
-    MANUAL_UPGRADES.forEach(u => { state.clickPower += u.clickBonus * state.manualUpgrades[u.id]; });
+    const manual = window.MANUAL_UPGRADES || [];
+    manual.forEach(u => { 
+        const owned = state.manualUpgrades[u.id] || 0;
+        state.clickPower += u.clickBonus * owned; 
+    });
     state.cps = 0;
-    AUTO_UPGRADES.forEach(u => { state.cps += u.cpsBonus * state.autoUpgrades[u.id]; });
+    const auto = window.AUTO_UPGRADES || [];
+    auto.forEach(u => { 
+        const owned = state.autoUpgrades[u.id] || 0;
+        state.cps += u.cpsBonus * owned; 
+    });
 }
 
 // ─── SOUND ENGINE (Web Audio API — no files needed) ───────────────
@@ -321,14 +336,24 @@ function updateUI() {
 
 // ─── RENDER UPGRADES ──────────────────────────────────────────────
 function renderUpgrades() {
-    renderUpgradeTab('manualGrid', MANUAL_UPGRADES, 'manual',
+    const manual = window.MANUAL_UPGRADES || [];
+    const auto = window.AUTO_UPGRADES || [];
+
+    renderUpgradeTab('manualGrid', manual, 'manual',
         ['TIER 1 — MUNDANE', 'TIER 2 — REINFORCED', 'TIER 3 — SCIENCE', 'TIER 4 — COSMIC', 'TIER 5 — ADVANCED', 'TIER 6 — MYTHICAL', 'TIER 7 — DIVINE', 'TIER 8 — OMNIPOTENT', 'TIER 9 — TRANSCENDENT', 'TIER 10 — ABSOLUTE'], 11);
-    renderUpgradeTab('autoGrid', AUTO_UPGRADES, 'auto',
+    renderUpgradeTab('autoGrid', auto, 'auto',
         ['TIER 1 — BEGINNER', 'TIER 2 — SCRIPTS', 'TIER 3 — INDUSTRIAL', 'TIER 4 — ADVANCED', 'TIER 5 — SCI-FI', 'TIER 6 — COSMIC', 'TIER 7 — DIVINE', 'TIER 8 — ASTRAL', 'TIER 9 — TRANSCENDENT', 'TIER 10 — ABSOLUTE'], 11);
 }
 
 function renderUpgradeTab(gridId, list, tab, sectionNames, perSection) {
-    const grid = document.getElementById(gridId); grid.innerHTML = '';
+    if (!list || !Array.isArray(list)) {
+        return;
+    }
+    const grid = document.getElementById(gridId);
+    if (!grid) {
+        return;
+    }
+    grid.innerHTML = '';
     list.forEach((upg, i) => {
         if (i % perSection === 0 && sectionNames[i / perSection]) {
             const hdr = document.createElement('div');
@@ -695,15 +720,11 @@ checkForUpdate();
 function initGame() {
     const loaded = autoLoad();
     document.getElementById('soundBtn').textContent = soundMuted ? '🔇' : '🔊';
+    
+    // Always call ensureStateDefaults to handle new upgrades or missing data in loaded save
+    ensureStateDefaults();
+    
     applySkin();
-
-    if (!loaded) {
-        // Fresh start defaults if no save exists
-        MANUAL_UPGRADES.forEach(u => { if (state.manualUpgrades[u.id] === undefined) state.manualUpgrades[u.id] = 0; });
-        AUTO_UPGRADES.forEach(u => { if (state.autoUpgrades[u.id] === undefined) state.autoUpgrades[u.id] = 0; });
-        ACHIEVEMENTS.forEach(a => { if (state.achievements[a.id] === undefined) state.achievements[a.id] = false; });
-    }
-
     recalcTotals();
     renderUpgrades();
     renderAchievements();
